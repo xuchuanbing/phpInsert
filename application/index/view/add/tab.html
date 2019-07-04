@@ -72,13 +72,13 @@
                 </tr>
                 <tr>
                     <td width="10%">姓　　名：</td><td><input type="text"></td>
-                    <td width="10%">性　　别：</td><td><input type="text"></td>
-                    <td width="10%">出生日期：</td><td><input type="text"></td>
+                    <td width="10%">性　　别：</td><td >男：<input type="radio" checked="checked" style="height: 13px; width: 16px;"> 女：<input type="radio" style="height: 13px; width: 16px;"></td>
+                    <td width="10%">出生日期：</td><td><input type="date"></td>
                 </tr>
                 <tr>
                     <td>升　　高：</td><td><input type="text"></td>
                     <td>出 生 地：</td><td><input type="text"></td>
-                    <td>婚姻状况：</td><td><input type="text"></td>
+                    <td>婚姻状况：</td><td> 未婚：<input type="radio" style="height: 13px; width: 16px;"> 已婚：<input type="radio" checked="checked" style="height: 13px; width: 16px;"> 离异：<input type="radio" style="height: 13px; width: 16px;"></td>
                 </tr>
                 <tr>
                     <td>名　　族：</td><td><input type="text"></td>
@@ -95,7 +95,14 @@
                     <td>参加工作时间：</td><td><input type="text"></td>
                 </tr>
                 <tr>
-                    <td>政治面貌：</td><td><input type="text"></td>
+                    <td>政治面貌：</td>
+                    <td><select>
+                        <option>中共党员(含预备党员)</option>
+                        <option>团员</option>
+                        <option>群众</option>
+                        <option>民主党派</option>
+                        <option>无党派人士</option>
+                    </select></td>
                     <td>手机号码：</td><td><input type="text"></td>
                     <td>单位电话：</td><td><input type="text"></td>
                 </tr>
@@ -170,7 +177,7 @@
                 <tr>
                     <td colspan="6">+</td>
                 </tr>
-                <tr">
+                <tr>
                     <td colspan="6">
                         <button>提　交</button>　　　　　
                         <button>取　消</button>

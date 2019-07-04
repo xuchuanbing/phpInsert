@@ -13,5 +13,11 @@ use think\Controller;
 
 class Base extends Controller
 {
-
+    public function __construct(){
+        parent::__construct();
+        session('userinfo','admin');
+        if(!session('userinfo')){
+            $this->redirect("index/login/login");
+        }
+    }
 }
