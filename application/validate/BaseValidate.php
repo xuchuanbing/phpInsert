@@ -40,9 +40,17 @@ class BaseValidate extends Validate
         }
     }
 
-    protected function checkXvcf($value){
-
+    protected function checkXcvfl($value){
         $result = md5(md5(session("login")));
+        if($result == $value){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    protected function checkXcvfr($value){
+        $result = md5(md5(session("register")));
         if($result == $value){
             return true;
         }else{
@@ -57,6 +65,15 @@ class BaseValidate extends Validate
             return true;
         }else{
             return false;
+        }
+    }
+
+    protected function isNotEmpty($value, $rule='', $data='', $field='')
+    {
+        if (empty($value)) {
+            return false;
+        } else {
+            return true;
         }
     }
 }

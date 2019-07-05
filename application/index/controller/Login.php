@@ -18,14 +18,6 @@ use app\validate\PhoneGet;
 
 class Login extends Bases
 {
-    public function xcvf(){
-        $loginID = config("setting.login_ID");
-        $randNum = randNum(6);
-        $time = time();
-        $randData = $loginID.$randNum.$time;
-        return $randData;
-    }
-
     public function login(){
         session("login",$this->xcvf());
         $xcvf = md5(md5(session("login")));
@@ -45,7 +37,6 @@ class Login extends Bases
             }else{
                 throw new BaseException([
                     "msg" => "验证码错误！",
-                    "code" => 200,
                     "errorCode" => 40000
                 ]);
             }

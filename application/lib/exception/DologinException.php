@@ -3,15 +3,15 @@
  * Created by PhpStorm.
  * User: Administrator
  * Date: 2019/7/4 0004
- * Time: 上午 09:34
+ * Time: 下午 02:31
  */
 
 namespace app\lib\exception;
 
 
-class ParamException extends BaseException
+class DologinException extends BaseException
 {
     public $code = 200;
-    public $errorCode = 10000;
-    public $msg = "invalid parameters";
+    public $errorCode = 40000;
+    public $msg = "该手机号未注册";
 }

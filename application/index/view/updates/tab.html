@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>用户资料查询</title>
+    <style type="text/css">
+        <!--
+        body {
+            margin-left: 0px;
+            margin-top: 0px;
+            margin-right: 0px;
+            margin-bottom: 0px;
+        }
+        .STYLE1 {font-size: 12px}
+        .STYLE3 {font-size: 12px; font-weight: bold; }
+        .STYLE4 {
+            color: #03515d;
+            font-size: 12px;
+        }
+        -->
+        .addT tr{
+            height: 32px;
+        }
+        .addT td{
+            text-align: center;
+        }
+        .addT td input{
+            width: 100%;
+            height: 32px;
+            border: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+        <td height="30" background="__STATIC__/images/tab_05.gif">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td width="12" height="30"><img src="__STATIC__/images/tab_03.gif" width="12" height="30" /></td>
+                    <td>
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td width="46%" valign="middle">
+                                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td width="3%">
+                                                <div align="center">
+                                                    <img src="__STATIC__/images/tb.gif" width="16" height="16" />
+                                                </div>
+                                            </td>
+                                            <td width="97%" class="STYLE1"><span class="STYLE3">你当前的位置</span>：[业务中心]-[我的邮件]</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td width="16"><img src="__STATIC__/images/tab_07.gif" width="16" height="30" /></td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr >
+        <td height="30">
+            <table class="addT" width="80%" border="1" cellspacing="0" cellpadding="0" style="margin: auto; font-size: 14px">
+
+                <tr>
+                    <td colspan="6" style="background-color: #ffff85 ;text-align:left;">个人信息</td>
+                </tr>
+                <tr>
+                    <td width="10%">姓　　名：</td><td><input type="text"></td>
+                    <td width="10%">性　　别：</td><td >男：<input type="radio" checked="checked" style="height: 13px; width: 16px;"> 女：<input type="radio" style="height: 13px; width: 16px;"></td>
+                    <td width="10%">出生日期：</td><td><input type="text"></td>
+                </tr>
+                <tr>
+                    <td>升　　高：</td><td><input type="text"></td>
+                    <td>出 生 地：</td><td><input type="text"></td>
+                    <td>婚姻状况：</td><td>已婚：<input type="radio" checked="checked" style="height: 13px; width: 16px;"> 未婚：<input type="radio" style="height: 13px; width: 16px;"></td>
+                </tr>
+                <tr>
+                    <td>名　　族：</td><td><input type="text"></td>
+                    <td>证件号码：</td><td><input type="text"></td>
+                    <td>照　　片：</td><td><input type="file"></td>
+                </tr>
+                <tr>
+                    <td>最高学历：</td><td><input type="text"></td>
+                    <td>毕业院校：</td><td colspan="3"><input type="text"></td>
+                </tr>
+                <tr>
+                    <td>工作年限：</td><td><input type="text"></td>
+                    <td>本单位工作年限：</td><td><input type="text"></td>
+                    <td>参加工作时间：</td><td><input type="text"></td>
+                </tr>
+                <tr>
+                    <td>政治面貌：</td>
+                    <td>群众：<input type="radio" checked="checked" style="height: 13px; width: 16px;"> 团员：<input type="radio" style="height: 13px; width: 16px;">党员：<input type="radio" style="height: 13px; width: 16px;"></td>
+                    <td>手机号码：</td><td><input type="text"></td>
+                    <td>单位电话：</td><td><input type="text"></td>
+                </tr>
+                <tr>
+                    <td colspan="6" style="background-color: #ffff85; text-align:left;">在职信息</td>
+                </tr>
+                <tr>
+                    <td>工　　号：</td><td><input type="text"></td>
+                    <td>所属部门：</td><td><input type="text"></td>
+                    <td>岗位名称：</td><td><input type="text"></td>
+                </tr>
+                <tr>
+                    <td>员工类别：</td><td><input type="text"></td>
+                    <td>职　　称：</td><td><input type="text"></td>
+                    <td>工作状态：</td><td><input type="text"></td>
+                </tr>
+                <tr>
+                    <td>在职状态：</td><td><input type="text"></td>
+                    <td>认证资格等级：</td><td><input type="text"></td>
+                    <td>入职时间：</td><td><input type="text"></td>
+                </tr>
+                <tr>
+                    <td colspan="6" style="background-color: #ffff85; text-align:left;">党政信息</td>
+                </tr>
+                <tr>
+                    <td>类　　别</td><td>加入时间</td>
+                    <td>任职情况</td><td>加入单位</td>
+                    <td colspan="2">介绍人</td>
+                </tr>
+                <tr>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td colspan="2"><input type="text"></td>
+                </tr>
+                <tr>
+                    <td colspan="6" style="background-color: #ffff85; text-align:left;">家庭主要成员和主要社会关系</td>
+                </tr>
+                <tr>
+                    <td>姓　　名</td><td>关　　系</td>
+                    <td>单　　位</td><td>职　　务</td>
+                    <td>出身日期</td>
+                    <td>政治面貌</td>
+                </tr>
+                <tr>
+                    <td colspan="6">+</td>
+                </tr>
+                <tr>
+                    <td colspan="6" style="background-color: #ffff85; text-align:left;">教育经历</td>
+                </tr>
+                <tr>
+                    <td>开始时间</td>
+                    <td>结束时间</td>
+                    <td>学　　校</td>
+                    <td>专　　业</td>
+                    <td>学　　历</td>
+                    <td>学　　位</td>
+                </tr>
+                <tr>
+                    <td colspan="6">+</td>
+                </tr>
+                <tr>
+                    <td colspan="6" style="background-color: #ffff85; text-align:left;">工作履历</td>
+                </tr>
+                <tr>
+                    <td>开始时间</td>
+                    <td>结束时间</td>
+                    <td colspan="2">工作单位</td>
+                    <td colspan="2">职务或岗位</td>
+                </tr>
+                <tr>
+                    <td colspan="6">+</td>
+                </tr>
+                <tr>
+                    <td colspan="6">
+                        <button>提　交</button>　　　　　
+                        <button>取　消</button>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

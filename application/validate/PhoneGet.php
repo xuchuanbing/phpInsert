@@ -12,7 +12,7 @@ namespace app\validate;
 class PhoneGet extends BaseValidate
 {
     protected $rule = [
-        "phone" => "require|isMobile"
+        "phone" => "require|isMobile|isNotEmpty"
     ];
     protected $message = [
         "phone" => "手机号格式错误"

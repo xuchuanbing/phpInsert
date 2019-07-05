@@ -123,7 +123,8 @@
         </table></td>
     </tr>
     <tr>
-        <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <td>
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
                 <td width="8" background="__STATIC__/images/tab_12.gif">&nbsp;</td>
                 <td><table width="100%" border="0" cellpadding="0" cellspacing="1" bgcolor="b5d6e6" onmouseover="changeto()"  onmouseout="changeback()">
@@ -131,41 +132,53 @@
                         <td width="3%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center">
                             <input type="checkbox" name="checkbox" value="checkbox" />
                         </div></td>
-                        <td width="3%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">序号</span></div></td>
-                        <td width="12%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">姓名</span></div></td>
-                        <td width="18%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">手机号</span></div></td>
-                        <td width="18%" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">注册时间</span></div></td>
-                        <td width="14%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">状态</span></div></td>
+                        <td width="12%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF">
+                            <div align="center">
+                                <span class="STYLE1">序号</span>
+                            </div>
+                        </td>
+                        <td width="12%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF">
+                            <div align="center">
+                                <span class="STYLE1">姓名</span>
+                            </div>
+                        </td>
+                        <td width="18%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF">
+                            <div align="center"><span class="STYLE1">手机号</span></div>
+                        </td>
+                        <td width="3%" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">登录时间</span></div></td>
+                        <td width="14%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">登录IP</span></div></td>
                         <td width="15%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF" class="STYLE1"><div align="center">基本操作</div></td>
                     </tr>
 
 
-                    <?php foreach($data as $vo){ ?>
-                        <tr>
-                            <td height="20" bgcolor="#FFFFFF"><div align="center">
-                                <input type="checkbox" name="checkbox2" value="checkbox" />
-                            </div></td>
-                            <td height="20" bgcolor="#FFFFFF"><div align="center" class="STYLE1">
-                                <div align="center"><?php echo $vo['id']; ?></div>
-                            </div></td>
-                            <td height="20" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1"><?php echo $vo['name']; ?></span></div></td>
-                            <td height="20" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1"><?php echo $vo['phone']; ?></span></div></td>
-                            <td bgcolor="#FFFFFF"><div align="center"><span class="STYLE1"><?php echo $vo['create_time']; ?></span></div></td>
-                            <td height="20" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1"><?php if($vo['status']=="1"){echo "启用";}elseif($vo['status']=="2"){echo "禁用";} ?></span></div></td>
-                            <td height="20" bgcolor="#FFFFFF">
-                                <div align="center">
-                                    <span class="STYLE4">
-                                        <img src="__STATIC__/images/edt.gif" width="16" height="16" />
-                                        <a href="">查看</a>
-                                        <img src="__STATIC__/images/edt.gif" width="16" height="16" />
-                                        <a href="">编辑</a>
-                                        <img src="__STATIC__/images/del.gif" width="16" height="16" />
-                                        <a href="">删除</a>
-                                    </span>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php } ?>
+
+
+
+
+
+
+
+                    <tr>
+                        <td height="20" bgcolor="#FFFFFF"><div align="center">
+                            <input type="checkbox" name="checkbox3" value="checkbox" />
+                        </div></td>
+                        <td height="20" bgcolor="#FFFFFF"><div align="center" class="STYLE1">
+                            <div align="center">02</div>
+                        </div></td>
+                        <td height="20" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">13813916585</span></div></td>
+                        <td height="20" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">2007-11-16 15:00:20 </span></div></td>
+                        <td bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">tiezhu0902@163.com</span></div></td>
+                        <td height="20" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">南京科技股份有限公司…</span></div></td>
+                        <td height="20" bgcolor="#FFFFFF">
+                            <div align="center">
+                                <span class="STYLE4">
+                                    <img src="__STATIC__/images/edt.gif" width="16" height="16" />查看
+                                    <img src="__STATIC__/images/edt.gif" width="16" height="16" />编辑
+                                    <img src="__STATIC__/images/del.gif" width="16" height="16" />删除
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
 
                 </table>
                 </td>

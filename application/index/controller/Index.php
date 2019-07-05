@@ -1,6 +1,8 @@
 <?php
 namespace app\index\controller;
 
+use app\index\model\Peregister;
+
 class Index extends Base
 {
     public function index()
@@ -28,6 +30,10 @@ class Index extends Base
         return $this->fetch();
     }
     public function tab(){
+        $result = Peregister::getAllInfo();
+        $result = $result->toArray();
+
+        $this->assign("data",$result);
         return $this->fetch();
     }
 }

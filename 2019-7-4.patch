@@ -1,0 +1,1585 @@
+Index: application/extra/setting.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/extra/setting.php	(date 1562208241762)
++++ application/extra/setting.php	(date 1562208241762)
+@@ -0,0 +1,12 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/4 0004
++ * Time: 上午 10:42
++ */
++
++return [
++    "login_ID"      =>  "jhkjlogin",
++    "register_ID"   =>  "jhkjregister"
++];
+\ No newline at end of file
+Index: application/extra/smsyzm.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/extra/smsyzm.php	(date 1562054867338)
++++ application/extra/smsyzm.php	(date 1562054867338)
+@@ -0,0 +1,14 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/2 0002
++ * Time: 下午 03:47
++ */
++
++return [
++    "smsAppid"       =>     "829363375c80497c8dd5030753e9f82e",
++    "smsTemplateId"  =>     "481523",
++    "smsAccountSid"  =>     "a2297fd85dd24eef7e56143eb095b0eb",
++    "token"          =>     "2423a1034d9a7bb1405c6483b5624311"
++];
+\ No newline at end of file
+Index: application/index/controller/Base.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/controller/Base.php	(revision 5b8902ddedc5f25a2f4d6dd3ff6c7ed75352c5dd)
++++ application/index/controller/Base.php	(date 1562223978288)
+@@ -13,5 +13,11 @@
+ 
+ class Base extends Controller
+ {
+-
++    public function __construct(){
++        parent::__construct();
++        session('userinfo','admin');
++        if(!session('userinfo')){
++            $this->redirect("index/login/login");
++        }
++    }
+ }
+\ No newline at end of file
+Index: application/index/controller/Login.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/controller/Login.php	(revision 5b8902ddedc5f25a2f4d6dd3ff6c7ed75352c5dd)
++++ application/index/controller/Login.php	(date 1562223701586)
+@@ -9,9 +9,79 @@
+ namespace app\index\controller;
+ 
+ 
+-class Login extends Base
++use app\index\model\Peregister;
++use app\index\service\SmsGetcode;
++use app\lib\exception\BaseException;
++use app\lib\exception\DologinException;
++use app\validate\DoLoginPost;
++use app\validate\PhoneGet;
++
++class Login extends Bases
+ {
++    public function xcvf(){
++        $loginID = config("setting.login_ID");
++        $randNum = randNum(6);
++        $time = time();
++        $randData = $loginID.$randNum.$time;
++        return $randData;
++    }
++
+     public function login(){
++        session("login",$this->xcvf());
++        $xcvf = md5(md5(session("login")));
++        $this->assign(["xcvf"=>$xcvf]);
+         return $this->fetch();
+     }
++
++    public function doLogin(){
++        (new DoLoginPost())->goCheck();
++        //手机号和验证码的验证登陆
++        //手机号从数据库获取，如果存在，验证验证码，如果不存在抛异常，跳转注册页面
++        $data = Peregister::getPhoneData($_POST['phone']);
++        if($data){
++            //判断验证码
++            if($this->checkCode($_POST['phone'],$_POST['code'])){
++                session("userinfo",$data);
++            }else{
++                throw new BaseException([
++                    "msg" => "验证码错误！",
++                    "code" => 200,
++                    "errorCode" => 40000
++                ]);
++            }
++        }else{
++            throw new DologinException();
++        }
++    }
++
++    /***
++     * 发送验证码
++     * @throws BaseException
++     * @throws \app\lib\smscode\Exception
++     */
++    public function smsCode(){
++        (new PhoneGet())->goCheck();
++        $appid = config("smsyzm.smsAppid");
++        $templateid = config("smsyzm.smsTemplateId");
++        $param = randNum(6).",60";
++        $mobile = $_POST['phone'];
++        $uid = 1;
++        $ucpass = (new SmsGetcode())->index();
++        $data = json_decode($ucpass->SendSms($appid, $templateid, $param, $mobile, $uid), true);
++        if($data["code"] == "000000"){
++            session($mobile,explode(",",$param)[0]);
++            echo json_encode([
++                "msg" => "发送成功",
++                "code"=> 200,
++                "errorCode"=>$data['code']
++            ]);
++        }else{
++            throw new BaseException([
++                "msg" => $data['msg'],
++                "code" => 200,
++                "errorCode" => $data['code']
++            ]);
++        }
++    }
++
+ }
+\ No newline at end of file
+Index: application/index/controller/Register.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/controller/Register.php	(date 1562220200453)
++++ application/index/controller/Register.php	(date 1562220200453)
+@@ -0,0 +1,19 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/3 0003
++ * Time: 上午 11:33
++ */
++
++namespace app\index\controller;
++
++
++use think\Controller;
++
++class Register extends Controller
++{
++    public function index(){
++        return $this->fetch();
++    }
++}
+\ No newline at end of file
+Index: application/index/controller/Update.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/controller/Update.php	(date 1562047346385)
++++ application/index/controller/Update.php	(date 1562047346385)
+@@ -0,0 +1,32 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/2 0002
++ * Time: 下午 01:55
++ */
++
++namespace app\index\controller;
++
++
++use think\Request;
++
++class Update extends Base
++{
++    public function index(){
++        return $this->fetch();
++    }
++    public function center(){
++        return $this->fetch();
++    }
++    public function middel(){
++        $controller = Request::instance()->controller();
++        $this->assign([
++            'controller'=>$controller
++        ]);
++        return $this->fetch();
++    }
++    public function tab(){
++        return $this->fetch();
++    }
++}
+\ No newline at end of file
+Index: application/index/controller/Updates.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/controller/Updates.php	(date 1562048360332)
++++ application/index/controller/Updates.php	(date 1562048360332)
+@@ -0,0 +1,30 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/2 0002
++ * Time: 下午 02:18
++ */
++
++namespace app\index\controller;
++
++use think\Request;
++class Updates extends Base
++{
++    public function index(){
++        return $this->fetch();
++    }
++    public function center(){
++        return $this->fetch();
++    }
++    public function middel(){
++        $controller = Request::instance()->controller();
++        $this->assign([
++            'controller'=>$controller
++        ]);
++        return $this->fetch();
++    }
++    public function tab(){
++        return $this->fetch();
++    }
++}
+\ No newline at end of file
+Index: application/index/controller/User.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/controller/User.php	(date 1562046696079)
++++ application/index/controller/User.php	(date 1562046696079)
+@@ -0,0 +1,35 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/2 0002
++ * Time: 上午 11:04
++ */
++
++namespace app\index\controller;
++
++use think\Request;
++class User extends Base
++{
++    public function index(){
++        return $this->fetch();
++    }
++    public function update(){
++        return $this->fetch();
++    }
++    public function center(){
++        return $this->fetch();
++    }
++    public function middel(){
++        $controller = Request::instance()->controller();
++        $action = Request::instance()->action();
++        $this->assign([
++            'action'=>$action,
++            'controller'=>$controller
++        ]);
++        return $this->fetch();
++    }
++    public function tab(){
++        return $this->fetch();
++    }
++}
+\ No newline at end of file
+Index: application/index/service/BaseService.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/service/BaseService.php	(date 1562204355266)
++++ application/index/service/BaseService.php	(date 1562204355266)
+@@ -0,0 +1,15 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/4 0004
++ * Time: 上午 09:39
++ */
++
++namespace app\index\service;
++
++
++class BaseService
++{
++
++}
+\ No newline at end of file
+Index: application/index/service/SmsGetcode.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/service/SmsGetcode.php	(date 1562204491411)
++++ application/index/service/SmsGetcode.php	(date 1562204491411)
+@@ -0,0 +1,24 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/4 0004
++ * Time: 上午 09:38
++ */
++
++namespace app\index\service;
++
++
++use app\lib\smscode\Ucpaas;
++
++class SmsGetcode extends BaseService
++{
++    public function index(){
++        $option = [
++            "accountsid"=>config("smsyzm.smsAccountSid"),
++            "token"=>config("smsyzm.token")
++        ];
++        $ucpass = new Ucpaas($option);
++        return $ucpass;
++    }
++}
+\ No newline at end of file
+Index: application/index/view/add/tab.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/view/add/tab.html	(revision 5b8902ddedc5f25a2f4d6dd3ff6c7ed75352c5dd)
++++ application/index/view/add/tab.html	(date 1562049676408)
+@@ -72,13 +72,13 @@
+                 </tr>
+                 <tr>
+                     <td width="10%">姓　　名：</td><td><input type="text"></td>
+-                    <td width="10%">性　　别：</td><td><input type="text"></td>
+-                    <td width="10%">出生日期：</td><td><input type="text"></td>
++                    <td width="10%">性　　别：</td><td >男：<input type="radio" checked="checked" style="height: 13px; width: 16px;"> 女：<input type="radio" style="height: 13px; width: 16px;"></td>
++                    <td width="10%">出生日期：</td><td><input type="date"></td>
+                 </tr>
+                 <tr>
+                     <td>升　　高：</td><td><input type="text"></td>
+                     <td>出 生 地：</td><td><input type="text"></td>
+-                    <td>婚姻状况：</td><td><input type="text"></td>
++                    <td>婚姻状况：</td><td> 未婚：<input type="radio" style="height: 13px; width: 16px;"> 已婚：<input type="radio" checked="checked" style="height: 13px; width: 16px;"> 离异：<input type="radio" style="height: 13px; width: 16px;"></td>
+                 </tr>
+                 <tr>
+                     <td>名　　族：</td><td><input type="text"></td>
+@@ -95,7 +95,14 @@
+                     <td>参加工作时间：</td><td><input type="text"></td>
+                 </tr>
+                 <tr>
+-                    <td>政治面貌：</td><td><input type="text"></td>
++                    <td>政治面貌：</td>
++                    <td><select>
++                        <option>中共党员(含预备党员)</option>
++                        <option>团员</option>
++                        <option>群众</option>
++                        <option>民主党派</option>
++                        <option>无党派人士</option>
++                    </select></td>
+                     <td>手机号码：</td><td><input type="text"></td>
+                     <td>单位电话：</td><td><input type="text"></td>
+                 </tr>
+@@ -170,7 +177,7 @@
+                 <tr>
+                     <td colspan="6">+</td>
+                 </tr>
+-                <tr">
++                <tr>
+                     <td colspan="6">
+                         <button>提　交</button>　　　　　
+                         <button>取　消</button>
+Index: application/index/view/index/left.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/view/index/left.html	(revision 5b8902ddedc5f25a2f4d6dd3ff6c7ed75352c5dd)
++++ application/index/view/index/left.html	(date 1562048360294)
+@@ -82,7 +82,7 @@
+                                                                 <table width="95%" border="0" cellspacing="0" cellpadding="0">
+                                                                     <tr>
+                                                                         <td height="20" style="cursor:hand" onmouseover="this.style.borderStyle='solid';this.style.borderWidth='1';borderColor='#7bc4d3';" onmouseout="this.style.borderStyle='none'">
+-                                                                            <span class="STYLE3"><a href="/index/index/index" target='_blank'>登录用户信息</a></span>
++                                                                            <span class="STYLE3"><a href="/index/user/index" target='_blank'>登录用户信息</a></span>
+                                                                         </td>
+                                                                     </tr>
+                                                                 </table>
+@@ -98,7 +98,7 @@
+                                                                 <table width="95%" border="0" cellspacing="0" cellpadding="0">
+                                                                     <tr>
+                                                                         <td height="20" style="cursor:hand" onmouseover="this.style.borderStyle='solid';this.style.borderWidth='1';borderColor='#7bc4d3';" onmouseout="this.style.borderStyle='none'">
+-                                                                            <span class="STYLE3">修改用户密码</span>
++                                                                            <span class="STYLE3"><a href="/index/update/index" target="_blank">修改用户密码</a></span>
+                                                                         </td>
+                                                                     </tr>
+                                                                 </table>
+@@ -234,7 +234,7 @@
+                                                                 <table width="95%" border="0" cellspacing="0" cellpadding="0">
+                                                                     <tr>
+                                                                         <td height="20" style="cursor:hand" onmouseover="this.style.borderStyle='solid';this.style.borderWidth='1';borderColor='#7bc4d3';" onmouseout="this.style.borderStyle='none'">
+-                                                                            <span class="STYLE3">其他业务</span>
++                                                                            <span class="STYLE3"><a href="/index/updates/index" target='_blank'>用户资料修改</a></span>
+                                                                         </td>
+                                                                     </tr>
+                                                                 </table>
+Index: application/index/view/index/tab.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/view/index/tab.html	(revision 5b8902ddedc5f25a2f4d6dd3ff6c7ed75352c5dd)
++++ application/index/view/index/tab.html	(date 1562032402026)
+@@ -194,18 +194,22 @@
+                 <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
+                     <tr>
+                         <td class="STYLE4">&nbsp;&nbsp;共有 120 条记录，当前第 1/10 页</td>
+-                        <td><table border="0" align="right" cellpadding="0" cellspacing="0">
+-                            <tr>
+-                                <td width="40"><img src="__STATIC__/images/first.gif" width="37" height="15" /></td>
+-                                <td width="45"><img src="__STATIC__/images/back.gif" width="43" height="15" /></td>
+-                                <td width="45"><img src="__STATIC__/images/next.gif" width="43" height="15" /></td>
+-                                <td width="40"><img src="__STATIC__/images/last.gif" width="37" height="15" /></td>
+-                                <td width="100"><div align="center"><span class="STYLE1">转到第
+-                    <input name="textfield" type="text" size="4" style="height:12px; width:20px; border:1px solid #999999;" />
+-                    页 </span></div></td>
+-                                <td width="40"><img src="__STATIC__/images/go.gif" width="37" height="15" /></td>
+-                            </tr>
+-                        </table></td>
++                        <td>
++                            <table border="0" align="right" cellpadding="0" cellspacing="0">
++                                <tr>
++                                    <td width="40"><img src="__STATIC__/images/first.gif" width="37" height="15" /></td>
++                                    <td width="45"><img src="__STATIC__/images/back.gif" width="43" height="15" /></td>
++                                    <td width="45"><img src="__STATIC__/images/next.gif" width="43" height="15" /></td>
++                                    <td width="40"><img src="__STATIC__/images/last.gif" width="37" height="15" /></td>
++                                    <td width="100">
++                                        <div align="center">
++                                            <span class="STYLE1">转到第<input name="textfield" type="text" size="4" style="height:12px; width:20px; border:1px solid #999999;" /> 页 </span>
++                                        </div>
++                                    </td>
++                                    <td width="40"><img src="__STATIC__/images/go.gif" width="37" height="15" /></td>
++                                </tr>
++                            </table>
++                        </td>
+                     </tr>
+                 </table></td>
+                 <td width="16"><img src="__STATIC__/images/tab_20.gif" width="16" height="35" /></td>
+Index: application/index/view/login/login.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/view/login/login.html	(revision 5b8902ddedc5f25a2f4d6dd3ff6c7ed75352c5dd)
++++ application/index/view/login/login.html	(date 1562209422028)
+@@ -5,7 +5,7 @@
+     <title>系统登录</title>
+     <script src="__STATIC__/BJUI/js/jquery-1.7.2.min.js"></script>
+     <script src="__STATIC__/BJUI/js/jquery.cookie.js"></script>
+-    <script src="__STATIC__/BJUI/js/sha256.js"></script>
++    <!--<script src="__STATIC__/BJUI/js/sha256.js"></script>-->
+     <link href="__STATIC__/BJUI/themes/css/bootstrap.min.css" rel="stylesheet">
+     <style type="text/css">
+         * {
+@@ -68,21 +68,22 @@
+                             i_index  = i;
+                     }
+                 });
+-                if (!issubmit) {
+-                    $(this).find('.in').eq(i_index).focus();
+-                    return false;
+-                }
+-                var $remember = $("#j_remember");
+-                if ($remember.attr('checked')) {
+-                    $.cookie(COOKIE_NAME, $("#j_username").val(), { path: '/', expires: 15 });
+-                } else {
+-                    $.cookie(COOKIE_NAME, null, { path: '/' });  //删除cookie
+-                }
+-                $("#login_ok").attr("disabled", true).val('登陆中..');
+-                var password = HMAC_SHA256_MAC($("#j_username").val(), $("#j_password").val());
+-                $("#j_password").val(HMAC_SHA256_MAC($("#j_randomKey").val(), password));
+-                window.location.href = 'index.html'; /*注意：生产环境时请删除此行*/
+-                return false;
++
++                // if (!issubmit) {
++                //     $(this).find('.in').eq(i_index).focus();
++                //     return false;
++                // }
++                // var $remember = $("#j_remember");
++                // if ($remember.attr('checked')) {
++                //     $.cookie(COOKIE_NAME, $("#j_username").val(), { path: '/', expires: 15 });
++                // } else {
++                //     $.cookie(COOKIE_NAME, null, { path: '/' });  //删除cookie
++                // }
++                // $("#login_ok").attr("disabled", true).val('登陆中..');
++                // var password = HMAC_SHA256_MAC($("#j_username").val(), $("#j_password").val());
++                // //$("#j_password").val(HMAC_SHA256_MAC($("#j_randomKey").val(), password));
++                // window.location.href = 'index.html'; /*注意：生产环境时请删除此行*/
++                // return false;
+             });
+         });
+         function genTimestamp(){
+@@ -106,10 +107,12 @@
+     #errorie div a {color: #459f79;font-size: 14px;}
+     #errorie div a:hover {text-decoration: underline;}
+ </style>
+-<div id="errorie"><div>您还在使用老掉牙的IE，请升级您的浏览器到 IE8以上版本 <a target="_blank" href="http://windows.microsoft.com/zh-cn/internet-explorer/ie-8-worldwide-languages">点击升级</a>&nbsp;&nbsp;强烈建议您更改换浏览器：<a href="http://down.tech.sina.com.cn/content/40975.html" target="_blank">谷歌 Chrome</a></div></div>
++<div id="errorie">
++    <div>您还在使用老掉牙的IE，请升级您的浏览器到 IE8以上版本 <a target="_blank" href="http://windows.microsoft.com/zh-cn/internet-explorer/ie-8-worldwide-languages">点击升级</a>&nbsp;&nbsp;强烈建议您更改换浏览器：<a href="http://down.tech.sina.com.cn/content/40975.html" target="_blank">谷歌 Chrome</a></div></div>
+ <![endif]-->
+ <div class="main_box">
+-    <div class="setting"><a href="javascript:;" onclick="choose_bg();" title="更换背景"><span class="glyphicon glyphicon-th-large"></span></a></div>
++    <div class="setting">
++        <a href="javascript:;" onclick="choose_bg();" title="更换背景"><span class="glyphicon glyphicon-th-large"></span></a></div>
+     <div class="login_box">
+         <div class="login_logo">
+             <img src="__STATIC__/images/logo.png" >
+@@ -122,32 +125,25 @@
+ 	    </c:if>
+         -->
+         <div class="login_form">
+-            <input type="hidden" value="${randomKey }" id="j_randomKey" />
+-            <form action="index.html" id="login_form" method="post">
+-                <input type="hidden" name="jfinal_token" value="${jfinal_token }" />
++            <form id="login_form" onSubmit="return false;">
++                <input type="hidden" name="_xcvf" value="{$xcvf}" />
+                 <div class="form-group">
+-                    <label for="j_username" class="t">手机号：</label> <input id="j_username" value="" name="username" type="text" class="form-control x319 in" autocomplete="off">
++                    <label for="j_username" class="t">手机号：</label> <input id="j_phone" value="" name="phone" type="text" class="form-control x319 in" autocomplete="off">
+                 </div>
+-                <!--<div class="form-group">-->
+-                    <!--<label for="j_password" class="t">密　码：</label> <input id="j_password" value="" name="passwordhash" type="password" class="form-control x319 in">-->
+-                <!--</div>-->
+                 <div class="form-group">
+-                    <label for="j_captcha" class="t">验证码：</label> <input id="j_captcha" name="j_captcha" type="text" class="form-control x164 in">
+-                    <!--<img id="captcha_img" alt="点击更换" title="点击更换" src="__STATIC__/images/captcha.jpeg" class="m">-->
++                    <label for="j_captcha" class="t">验证码：</label> <input id="j_code" name="code" type="text" class="form-control x164 in">
++                    <div style="float: right; margin-right: 106px; margin-top: 3px;"><input type="button" value="获取验证码" id="getsmsCode"></div>
+                 </div>
+-                <!--<div class="form-group">-->
+-                    <!--<label class="t"></label>-->
+-                    <!--<label for="j_remember" class="m"><input id="j_remember" type="checkbox" value="true">&nbsp;记住登陆账号!</label>-->
+-                <!--</div>-->
+                 <div class="form-group space">
+                     <label class="t"></label>　　　
+                     <input type="submit" id="login_ok" value="&nbsp;登&nbsp;录&nbsp;" class="btn btn-primary btn-lg">&nbsp;&nbsp;&nbsp;&nbsp;
+-                    <input type="reset" value="&nbsp;重&nbsp;置&nbsp;" class="btn btn-default btn-lg">
++                    <input type="button" value="&nbsp;注&nbsp;册&nbsp;" class="btn btn-default btn-lg">
+                 </div>
+             </form>
+         </div>
+     </div>
+-    <div class="bottom">Copyright &copy; 2013 - 2014 <a href="#">B-JUI 前端框架 - 系统登陆</a></div>
++    <div class="bottom">版权所有 &copy; 2013 - <?php echo date("Y"); ?></div>
+ </div>
++<script src="__STATIC__/js/smsCode.js"></script>
+ </body>
+ </html>
+\ No newline at end of file
+Index: application/index/view/register/index.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/view/register/index.html	(date 1562207905715)
++++ application/index/view/register/index.html	(date 1562207905715)
+@@ -0,0 +1,152 @@
++<!DOCTYPE html>
++<html xmlns=http://www.w3.org/1999/xhtml>
++<head>
++    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
++    <title>系统登录</title>
++    <script src="__STATIC__/BJUI/js/jquery-1.7.2.min.js"></script>
++    <script src="__STATIC__/BJUI/js/jquery.cookie.js"></script>
++    <script src="__STATIC__/BJUI/js/sha256.js"></script>
++    <link href="__STATIC__/BJUI/themes/css/bootstrap.min.css" rel="stylesheet">
++    <style type="text/css">
++        * {
++            font-family: "Verdana", "Tahoma", "Lucida Grande", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
++        }
++        body {
++            background: url(__STATIC__/images/loginbg_01.jpg) no-repeat center center fixed;
++            -webkit-background-size: cover;
++            -moz-background-size: cover;
++            -o-background-size: cover;
++            background-size: cover;
++        }
++        a:link {color: #285e8e;}
++        .main_box {
++            position: absolute; top:50%; left:50%; margin-top:-260px; margin-left: -300px; padding: 30px; width:600px; height:460px;
++            background: #FAFAFA; background: rgba(255,255,255,0.5); border: 1px #DDD solid;
++            border-radius: 5px;
++            -webkit-box-shadow: 1px 5px 8px #888888; -moz-box-shadow: 1px 5px 8px #888888; box-shadow: 1px 5px 8px #888888;
++        }
++        .main_box .setting {position: absolute; top: 5px; right: 10px; width: 10px; height: 10px;}
++        .main_box .setting a {color: #FF6600;}
++        .main_box .setting a:hover {color: #555;}
++        .login_logo {margin-bottom: 20px; height: 45px; text-align: center;}
++        .login_logo img {height: 45px;}
++        .login_msg {text-align: center; font-size: 16px;}
++        .login_form {padding-top: 20px; font-size: 16px;}
++        .login_box .form-control {display: inline-block; *display: inline; zoom: 1; width: auto; font-size: 18px;}
++        .login_box .form-control.x319 {width: 319px;}
++        .login_box .form-control.x164 {width: 164px;}
++        .login_box .form-group {margin-bottom: 20px;}
++        .login_box .form-group label.t {width: 120px; text-align: right; cursor: pointer;}
++        .login_box .form-group.space {padding-top: 15px; border-top: 1px #FFF dotted;}
++        .login_box .form-group img {margin-top: 1px; height: 32px; vertical-align: top;}
++        .login_box .m {cursor: pointer;}
++        .bottom {text-align: center; font-size: 12px;}
++    </style>
++    <script type="text/javascript">
++        var COOKIE_NAME = 'sys__username';
++        $(function() {
++            choose_bg();
++            //changeCode();
++            if ($.cookie(COOKIE_NAME)){
++                $("#j_username").val($.cookie(COOKIE_NAME));
++                $("#j_password").focus();
++                $("#j_remember").attr('checked', true);
++            } else {
++                $("#j_username").focus();
++            }
++            /*$("#captcha_img").click(function(){
++                changeCode();
++            });*/
++            $("#login_form").submit(function(){
++                var issubmit = true;
++                var i_index  = 0;
++                $(this).find('.in').each(function(i){
++                    if ($.trim($(this).val()).length == 0) {
++                        $(this).css('border', '1px #ff0000 solid');
++                        issubmit = false;
++                        if (i_index == 0)
++                            i_index  = i;
++                    }
++                });
++                if (!issubmit) {
++                    $(this).find('.in').eq(i_index).focus();
++                    return false;
++                }
++                var $remember = $("#j_remember");
++                if ($remember.attr('checked')) {
++                    $.cookie(COOKIE_NAME, $("#j_username").val(), { path: '/', expires: 15 });
++                } else {
++                    $.cookie(COOKIE_NAME, null, { path: '/' });  //删除cookie
++                }
++                $("#login_ok").attr("disabled", true).val('登陆中..');
++                var password = HMAC_SHA256_MAC($("#j_username").val(), $("#j_password").val());
++                $("#j_password").val(HMAC_SHA256_MAC($("#j_randomKey").val(), password));
++                window.location.href = 'index.html'; /*注意：生产环境时请删除此行*/
++                return false;
++            });
++        });
++        function genTimestamp(){
++            var time = new Date();
++            return time.getTime();
++        }
++        function changeCode(){
++            //$("#captcha_img").attr("src", "/captcha.jpeg?t="+genTimestamp());
++        }
++        function choose_bg() {
++            var bg = Math.floor(Math.random() * 9 + 1);
++            $('body').css('background-image', 'url(__STATIC__/images/loginbg_0'+ bg +'.jpg)');
++        }
++    </script>
++</head>
++<body>
++<!--[if lte IE 7]>
++<style type="text/css">
++    #errorie {position: fixed; top: 0; z-index: 100000; height: 30px; background: #FCF8E3;}
++    #errorie div {width: 900px; margin: 0 auto; line-height: 30px; color: orange; font-size: 14px; text-align: center;}
++    #errorie div a {color: #459f79;font-size: 14px;}
++    #errorie div a:hover {text-decoration: underline;}
++</style>
++<div id="errorie"><div>您还在使用老掉牙的IE，请升级您的浏览器到 IE8以上版本 <a target="_blank" href="http://windows.microsoft.com/zh-cn/internet-explorer/ie-8-worldwide-languages">点击升级</a>&nbsp;&nbsp;强烈建议您更改换浏览器：<a href="http://down.tech.sina.com.cn/content/40975.html" target="_blank">谷歌 Chrome</a></div></div>
++<![endif]-->
++<div class="main_box">
++    <div class="setting">
++        <a href="javascript:;" onclick="choose_bg();" title="更换背景"><span class="glyphicon glyphicon-th-large"></span></a></div>
++    <div class="login_box">
++        <div class="login_logo">
++            <img src="__STATIC__/images/logo.png" >
++        </div>
++        <!--
++		<c:if test="${!empty message}">
++			<div class="login_msg">
++	      		<font color="red">${message }</font>
++	    	</div>
++	    </c:if>
++        -->
++        <div class="login_form">
++            <input type="hidden" value="${randomKey }" id="j_randomKey" />
++            <form id="register_form" onSubmit="return false;">
++                <input type="hidden" name="jfinal_token" value="${jfinal_token }" />
++                <div class="form-group">
++                    <label for="j_username" class="t">手机号：</label> <input id="j_phone" value="" name="phone" type="text" class="form-control x319 in" autocomplete="off">
++                </div>
++                <div class="form-group">
++                <label for="j_password" class="t">姓　名：</label> <input id="j_name" value="" name="name" type="text" class="form-control x319 in">
++                </div>
++                <div class="form-group">
++                    <label for="j_captcha" class="t">验证码：</label> <input id="j_code" value="" name="code" type="text" class="form-control x164 in">
++                    <div style="float: right; margin-right: 106px; margin-top: 3px;"><input type="button" value="获取验证码" id="getsmsCode"></div>
++                    <!--<img id="captcha_img" alt="点击更换" title="点击更换" src="__STATIC__/images/captcha.jpeg" class="m">-->
++                </div>
++                <div class="form-group space">
++                    <label class="t"></label>　　　
++                    <input type="submit" id="login_ok" value="&nbsp;登&nbsp;录&nbsp;" class="btn btn-primary btn-lg">&nbsp;&nbsp;&nbsp;&nbsp;
++                    <input type="button" value="&nbsp;注&nbsp;册&nbsp;" class="btn btn-default btn-lg">
++                </div>
++            </form>
++        </div>
++    </div>
++    <div class="bottom">版权所有 &copy; 2013 - <?php echo date("Y"); ?></div>
++</div>
++<script src="__STATIC__/js/smsCode.js"></script>
++</body>
++</html>
+\ No newline at end of file
+Index: application/index/view/search/tab.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/view/search/tab.html	(revision 5b8902ddedc5f25a2f4d6dd3ff6c7ed75352c5dd)
++++ application/index/view/search/tab.html	(date 1562032114978)
+@@ -18,6 +18,9 @@
+             font-size: 12px;
+         }
+         -->
++        .addS td{
++            text-align: center;
++        }
+     </style>
+ </head>
+ 
+@@ -52,13 +55,105 @@
+             </table>
+         </td>
+     </tr>
+-    <tr >
++
++
++
++    <tr>
++        <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
++            <tr>
++                <td width="8" background="__STATIC__/images/tab_12.gif">&nbsp;</td>
++                <td><table width="100%" border="0" cellpadding="0" cellspacing="1" bgcolor="b5d6e6" onmouseover="changeto()"  onmouseout="changeback()">
++                    <tr>
++                        <td width="3%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center">
++                            <input type="checkbox" name="checkbox" value="checkbox" />
++                        </div></td>
++                        <td width="18%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">工号</span></div></td>
++                        <td width="12%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">姓名</span></div></td>
++                        <td width="18%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">出生日期</span></div></td>
++                        <td width="3%" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">民族</span></div></td>
++                        <td width="14%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">政治面貌</span></div></td>
++                        <td width="15%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF" class="STYLE1"><div align="center">基本操作</div></td>
++                    </tr>
++                    <!--
++                    <tr>
++                        <td height="20" bgcolor="#FFFFFF">
++                            <div align="center">
++                                <input type="checkbox" name="checkbox2" value="checkbox" />
++                            </div>
++                        </td>
++                        <td height="20" bgcolor="#FFFFFF">
++                            <div align="center" class="STYLE1">
++                                <div align="center">01</div>
++                            </div>
++                        </td>
++                        <td height="20" bgcolor="#FFFFFF">
++                            <div align="center">
++                                <span class="STYLE1">13813916585</span>
++                            </div>
++                        </td>
++                        <td height="20" bgcolor="#FFFFFF">
++                            <div align="center">
++                                <span class="STYLE1">2007-11-16 15:00:20 </span>
++                            </div>
++                        </td>
++                        <td bgcolor="#FFFFFF">
++                            <div align="center">
++                                <span class="STYLE1">tiezhu0902@163.com</span>
++                            </div>
++                        </td>
++                        <td height="20" bgcolor="#FFFFFF">
++                            <div align="center">
++                                <span class="STYLE1">南京科技股份有限公司…</span>
++                            </div>
++                        </td>
++                        <td height="20" bgcolor="#FFFFFF">
++                            <div align="center">
++                                <span class="STYLE4">
++                                    <img src="__STATIC__/images/edt.gif" width="16" height="16" />查看
++                                    <img src="__STATIC__/images/edt.gif" width="16" height="16" />编辑
++                                    <img src="__STATIC__/images/del.gif" width="16" height="16" />删除
++                                </span>
++                            </div>
++                        </td>
++                    </tr>-->
++                </table>
++                </td>
++                <td width="8" background="__STATIC__/images/tab_15.gif">&nbsp;</td>
++            </tr>
++        </table></td>
++    </tr>
++
++
++
++
++
++    <tr>
+         <td height="30">
+-            <table width="100%" border="0" cellspacing="0" cellpadding="0">
++            <table class="addS" width="80%" border="0" cellspacing="0" cellpadding="0" style="margin: auto; font-size: 14px">
++                <tr>
++                    <td colspan="4">
++                        <hr/>
++                    </td>
++                </tr>
++                <tr>
++                    <td colspan="4">
++                        <hr/>
++                    </td>
++                </tr>
++                <tr>
++                    <td>姓名：</td><td style="text-align: left"><input type="text"></td>
++                    <td>工号：</td><td style="text-align: left;"><input type="text"></td>
++                </tr>
+                 <tr>
+-                    <td>姓名：<input type="text"></td>
+-                    <td>姓名：<input type="text"></td>
+-                    <td>姓名：<input type="text"></td>
++                    <td colspan="4">
++                        <hr/>
++                    </td>
++                </tr>
++                <tr>
++                    <td colspan="4">
++                        <button style="width: 100px; height: 40px">提　交</button>　　　　　
++                        <button style="width: 100px; height: 40px">取　消</button>
++                    </td>
+                 </tr>
+             </table>
+         </td>
+Index: application/index/view/user/index.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/view/user/index.html	(date 1562046569109)
++++ application/index/view/user/index.html	(date 1562046569109)
+@@ -0,0 +1,19 @@
++<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
++<html xmlns="http://www.w3.org/1999/xhtml">
++<head>
++    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
++    <title>企业信息管理系统</title>
++</head>
++<frameset rows="98,*,8" frameborder="no" border="0" framespacing="0">
++    <frame src="/index/index/top" name="topFrame" scrolling="No" noresize="noresize" id="topFrame" />
++
++    <frame src="/index/user/center" name="mainFrame" id="mainFrame" />
++
++    <frame src="/index/index/down" name="bottomFrame" scrolling="No" noresize="noresize" id="bottomFrame" />
++</frameset>
++<noframes>
++    <body>
++
++    </body>
++</noframes>
++</html>
+\ No newline at end of file
+Index: application/index/view/user/update.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/index/view/user/update.html	(date 1562039987482)
++++ application/index/view/user/update.html	(date 1562039987482)
+@@ -0,0 +1,164 @@
++<!DOCTYPE html>
++<html xmlns="http://www.w3.org/1999/xhtml">
++<head>
++    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
++    <title>用户资料查询</title>
++    <style type="text/css">
++        <!--
++        body {
++            margin-left: 0px;
++            margin-top: 0px;
++            margin-right: 0px;
++            margin-bottom: 0px;
++        }
++        .STYLE1 {font-size: 12px}
++        .STYLE3 {font-size: 12px; font-weight: bold; }
++        .STYLE4 {
++            color: #03515d;
++            font-size: 12px;
++        }
++        -->
++        .addS td{
++            text-align: center;
++        }
++    </style>
++</head>
++
++<body>
++
++<table width="100%" border="0" cellspacing="0" cellpadding="0">
++    <tr>
++        <td height="30" background="__STATIC__/images/tab_05.gif">
++            <table width="100%" border="0" cellspacing="0" cellpadding="0">
++                <tr>
++                    <td width="12" height="30"><img src="__STATIC__/images/tab_03.gif" width="12" height="30" /></td>
++                    <td>
++                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
++                            <tr>
++                                <td width="46%" valign="middle">
++                                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
++                                        <tr>
++                                            <td width="3%">
++                                                <div align="center">
++                                                    <img src="__STATIC__/images/tb.gif" width="16" height="16" />
++                                                </div>
++                                            </td>
++                                            <td width="97%" class="STYLE1"><span class="STYLE3">你当前的位置</span>：[业务中心]-[我的邮件]</td>
++                                        </tr>
++                                    </table>
++                                </td>
++                            </tr>
++                        </table>
++                    </td>
++                    <td width="16"><img src="__STATIC__/images/tab_07.gif" width="16" height="30" /></td>
++                </tr>
++            </table>
++        </td>
++    </tr>
++
++
++
++    <tr>
++        <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
++            <tr>
++                <td width="8" background="__STATIC__/images/tab_12.gif">&nbsp;</td>
++                <td><table width="100%" border="0" cellpadding="0" cellspacing="1" bgcolor="b5d6e6" onmouseover="changeto()"  onmouseout="changeback()">
++                    <tr>
++                        <td width="3%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center">
++                            <input type="checkbox" name="checkbox" value="checkbox" />
++                        </div></td>
++                        <td width="18%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">工号</span></div></td>
++                        <td width="12%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">姓名</span></div></td>
++                        <td width="18%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">出生日期</span></div></td>
++                        <td width="3%" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">民族</span></div></td>
++                        <td width="14%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF"><div align="center"><span class="STYLE1">政治面貌</span></div></td>
++                        <td width="15%" height="22" background="__STATIC__/images/bg.gif" bgcolor="#FFFFFF" class="STYLE1"><div align="center">基本操作</div></td>
++                    </tr>
++                    <!--
++                    <tr>
++                        <td height="20" bgcolor="#FFFFFF">
++                            <div align="center">
++                                <input type="checkbox" name="checkbox2" value="checkbox" />
++                            </div>
++                        </td>
++                        <td height="20" bgcolor="#FFFFFF">
++                            <div align="center" class="STYLE1">
++                                <div align="center">01</div>
++                            </div>
++                        </td>
++                        <td height="20" bgcolor="#FFFFFF">
++                            <div align="center">
++                                <span class="STYLE1">13813916585</span>
++                            </div>
++                        </td>
++                        <td height="20" bgcolor="#FFFFFF">
++                            <div align="center">
++                                <span class="STYLE1">2007-11-16 15:00:20 </span>
++                            </div>
++                        </td>
++                        <td bgcolor="#FFFFFF">
++                            <div align="center">
++                                <span class="STYLE1">tiezhu0902@163.com</span>
++                            </div>
++                        </td>
++                        <td height="20" bgcolor="#FFFFFF">
++                            <div align="center">
++                                <span class="STYLE1">南京科技股份有限公司…</span>
++                            </div>
++                        </td>
++                        <td height="20" bgcolor="#FFFFFF">
++                            <div align="center">
++                                <span class="STYLE4">
++                                    <img src="__STATIC__/images/edt.gif" width="16" height="16" />查看
++                                    <img src="__STATIC__/images/edt.gif" width="16" height="16" />编辑
++                                    <img src="__STATIC__/images/del.gif" width="16" height="16" />删除
++                                </span>
++                            </div>
++                        </td>
++                    </tr>-->
++                </table>
++                </td>
++                <td width="8" background="__STATIC__/images/tab_15.gif">&nbsp;</td>
++            </tr>
++        </table></td>
++    </tr>
++
++
++
++
++
++    <tr>
++        <td height="30">
++            <table class="addS" width="80%" border="0" cellspacing="0" cellpadding="0" style="margin: auto; font-size: 14px">
++                <tr>
++                    <td colspan="4">
++                        <hr/>
++                    </td>
++                </tr>
++                <tr>
++                    <td colspan="4">
++                        <hr/>
++                    </td>
++                </tr>
++                <tr>
++                    <td>姓名：</td><td style="text-align: left"><input type="text"></td>
++                    <td>工号：</td><td style="text-align: left;"><input type="text"></td>
++                </tr>
++                <tr>
++                    <td colspan="4">
++                        <hr/>
++                    </td>
++                </tr>
++                <tr>
++                    <td colspan="4">
++                        <button style="width: 100px; height: 40px">提　交</button>　　　　　
++                        <button style="width: 100px; height: 40px">取　消</button>
++                    </td>
++                </tr>
++            </table>
++        </td>
++    </tr>
++</table>
++
++</body>
++</html>
+Index: application/lib/exception/BaseException.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/lib/exception/BaseException.php	(date 1562133555880)
++++ application/lib/exception/BaseException.php	(date 1562133555880)
+@@ -0,0 +1,39 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/3 0003
++ * Time: 上午 09:38
++ */
++
++namespace app\lib\exception;
++
++
++use think\Exception;
++
++class BaseException extends Exception
++{
++    public $code = 400;
++    public $msg = 'invalid parameters';
++    public $errorCode = 999;
++
++    /**
++     * 构造函数，接收一个关联数组
++     * @param array $params 关联数组只应包含code、msg和errorCode，且不应该是空值
++     */
++    public function __construct($params=[])
++    {
++        if(!is_array($params)){
++            return;
++        }
++        if(array_key_exists('code',$params)){
++            $this->code = $params['code'];
++        }
++        if(array_key_exists('msg',$params)){
++            $this->msg = $params['msg'];
++        }
++        if(array_key_exists('errorCode',$params)){
++            $this->errorCode = $params['errorCode'];
++        }
++    }
++}
+\ No newline at end of file
+Index: application/lib/exception/ExceptionHandler.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/lib/exception/ExceptionHandler.php	(date 1562125179063)
++++ application/lib/exception/ExceptionHandler.php	(date 1562125179063)
+@@ -0,0 +1,60 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/3 0003
++ * Time: 上午 09:37
++ */
++
++namespace app\lib\exception;
++
++
++use \Exception;
++use think\exception\Handle;
++use think\Log;
++use think\Request;
++
++class ExceptionHandler extends Handle
++{
++    private $msg;
++    private $code;
++    private $errorCode;
++
++    public function render(Exception $e){
++        if($e instanceof BaseException){
++            //如果是自定义异常，则控制http状态码，不需要记录日志
++            //因为这些通常是因为客户端传递参数错误或者是用户请求造成的异常
++            //不应当记录日志
++            $this->msg = $e->msg;
++            $this->code = $e->code;
++            $this->errorCode = $e->errorCode;
++        }else{
++            // 如果是服务器未处理的异常，将http状态码设置为500，并记录日志
++            if(config('app_debug')){
++                // 调试状态下需要显示TP默认的异常页面，因为TP的默认页面
++                // 很容易看出问题
++                return parent::render($e);
++            }
++
++            $this->code = 500;
++            $this->msg = 'sorry，we make a mistake. (^o^)Y';
++            $this->errorCode = 999;
++            $this->recordErrorLog($e);
++        }
++        $request = Request::instance();
++        $result = [
++            "msg"=>$this->msg,
++            "errorCode"=>$this->errorCode,
++            "request_url"=>$request->url()
++        ];
++        return json($result,$this->code);
++    }
++    private function recordErrorLog(Exception $e){
++        Log::init([
++            'type'=>"File",
++            'path'=>LOG_PATH,
++            'level'=>['error']
++        ]);
++        Log::record($e->getMessage(),'error');
++    }
++}
+\ No newline at end of file
+Index: application/lib/exception/ParamException.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/lib/exception/ParamException.php	(date 1562204123196)
++++ application/lib/exception/ParamException.php	(date 1562204123196)
+@@ -0,0 +1,17 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/4 0004
++ * Time: 上午 09:34
++ */
++
++namespace app\lib\exception;
++
++
++class ParamException extends BaseException
++{
++    public $code = 400;
++    public $errorCode = 10000;
++    public $msg = "invalid parameters";
++}
+\ No newline at end of file
+Index: application/lib/smscode/Ucpaas.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/lib/smscode/Ucpaas.php	(date 1562055443072)
++++ application/lib/smscode/Ucpaas.php	(date 1562055443072)
+@@ -0,0 +1,141 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/2 0002
++ * Time: 下午 04:15
++ */
++
++namespace app\lib\smscode;
++
++
++class Ucpaas
++{
++    //API请求地址
++    const BaseUrl = "https://open.ucpaas.com/ol/sms/";
++
++    //开发者账号ID。由32个英文字母和阿拉伯数字组成的开发者账号唯一标识符。
++    private $accountSid;
++
++    //开发者账号TOKEN
++    private $token;
++
++    public function  __construct($options)
++    {
++        if (is_array($options) && !empty($options)) {
++            $this->accountSid = isset($options['accountsid']) ? $options['accountsid'] : '';
++            $this->token = isset($options['token']) ? $options['token'] : '';
++        } else {
++            throw new Exception("非法参数");
++        }
++    }
++
++    private function getResult($url, $body = null, $method)
++    {
++        $data = $this->connection($url,$body,$method);
++        if (isset($data) && !empty($data)) {
++            $result = $data;
++        } else {
++            $result = '没有返回数据';
++        }
++        return $result;
++    }
++
++    /**
++     * @param $url    请求链接
++     * @param $body   post数据
++     * @param $method post或get
++     * @return mixed|string
++     */
++
++    private function connection($url, $body,$method)
++    {
++        if (function_exists("curl_init")) {
++            $header = array(
++                'Accept:application/json',
++                'Content-Type:application/json;charset=utf-8',
++            );
++            $ch = curl_init($url);
++            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
++            curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
++            if($method == 'post'){
++                curl_setopt($ch,CURLOPT_POST,1);
++                curl_setopt($ch,CURLOPT_POSTFIELDS,$body);
++            }
++            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
++            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
++            $result = curl_exec($ch);
++            curl_close($ch);
++        } else {
++            $opts = array();
++            $opts['http'] = array();
++            $headers = array(
++                "method" => strtoupper($method),
++            );
++            $headers[]= 'Accept:application/json';
++            $headers['header'] = array();
++            $headers['header'][]= 'Content-Type:application/json;charset=utf-8';
++
++            if(!empty($body)) {
++                $headers['header'][]= 'Content-Length:'.strlen($body);
++                $headers['content']= $body;
++            }
++
++            $opts['http'] = $headers;
++            $result = file_get_contents($url, false, stream_context_create($opts));
++        }
++        return $result;
++    }
++
++    /**
++    单条发送短信的function，适用于注册/找回密码/认证/操作提醒等单个用户单条短信的发送场景
++     * @param $appid        应用ID
++     * @param $mobile       接收短信的手机号码
++     * @param $templateid   短信模板，可在后台短信产品→选择接入的应用→短信模板-模板ID，查看该模板ID
++     * @param null $param   变量参数，多个参数使用英文逗号隔开（如：param=“a,b,c”）
++     * @param $uid			用于贵司标识短信的参数，按需选填。
++     * @return mixed|string
++     * @throws Exception
++     */
++    public function SendSms($appid,$templateid,$param=null,$mobile,$uid){
++        $url = self::BaseUrl . 'sendsms';
++        $body_json = array(
++            'sid'=>$this->accountSid,
++            'token'=>$this->token,
++            'appid'=>$appid,
++            'templateid'=>$templateid,
++            'param'=>$param,
++            'mobile'=>$mobile,
++            'uid'=>$uid,
++        );
++        $body = json_encode($body_json);
++        $data = $this->getResult($url, $body,'post');
++        return $data;
++    }
++
++    /**
++    群发送短信的function，适用于运营/告警/批量通知等多用户的发送场景
++     * @param $appid        应用ID
++     * @param $mobileList   接收短信的手机号码，多个号码将用英文逗号隔开，如“18088888888,15055555555,13100000000”
++     * @param $templateid   短信模板，可在后台短信产品→选择接入的应用→短信模板-模板ID，查看该模板ID
++     * @param null $param   变量参数，多个参数使用英文逗号隔开（如：param=“a,b,c”）
++     * @param $uid			用于贵司标识短信的参数，按需选填。
++     * @return mixed|string
++     * @throws Exception
++     */
++    public function SendSms_Batch($appid,$templateid,$param=null,$mobileList,$uid){
++        $url = self::BaseUrl . 'sendsms_batch';
++        $body_json = array(
++            'sid'=>$this->accountSid,
++            'token'=>$this->token,
++            'appid'=>$appid,
++            'templateid'=>$templateid,
++            'param'=>$param,
++            'mobile'=>$mobileList,
++            'uid'=>$uid,
++        );
++        $body = json_encode($body_json);
++        $data = $this->getResult($url, $body,'post');
++        return $data;
++    }
++}
+\ No newline at end of file
+Index: application/validate/BaseValidate.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/validate/BaseValidate.php	(date 1562221062227)
++++ application/validate/BaseValidate.php	(date 1562221062227)
+@@ -0,0 +1,62 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/4 0004
++ * Time: 上午 09:31
++ */
++
++namespace app\validate;
++
++
++use app\lib\exception\ParamException;
++use think\Request;
++use think\Validate;
++
++class BaseValidate extends Validate
++{
++    public function goCheck(){
++        $result = Request::instance();
++        $params = $result->param();
++        if(!$this->check($params)){
++            throw new ParamException([
++               "msg" => $this->error
++            ]);
++        }
++        return true;
++    }
++
++    //没有使用TP的正则验证，集中在一处方便以后修改
++    //不推荐使用正则，因为复用性太差
++    //手机号的验证规则
++    protected function isMobile($value)
++    {
++        $rule = '^1(3|4|5|7|8)[0-9]\d{8}$^';
++        $result = preg_match($rule, $value);
++        if ($result) {
++            return true;
++        } else {
++            return false;
++        }
++    }
++
++    protected function checkXvcf($value){
++
++        $result = md5(md5(session("login")));
++        if($result == $value){
++            return true;
++        }else{
++            return false;
++        }
++    }
++
++    protected function checkCode($value){
++        $rule = '/^\w{6}$/';
++        $result = preg_match($rule,$value);
++        if($result){
++            return true;
++        }else{
++            return false;
++        }
++    }
++}
+\ No newline at end of file
+Index: application/validate/DoLoginPost.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/validate/DoLoginPost.php	(date 1562221117512)
++++ application/validate/DoLoginPost.php	(date 1562221117512)
+@@ -0,0 +1,25 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/4 0004
++ * Time: 上午 11:11
++ */
++
++namespace app\validate;
++
++
++class DoLoginPost extends BaseValidate
++{
++    protected $rule = [
++        "_xcvf" =>  "require|checkXvcf",
++        "phone" =>  "require|isMobile",
++        "code"  =>  "require|checkCode"
++    ];
++
++    protected $message = [
++        "_xcvf" =>  "非法操作1",
++        "phone" =>  "请输入正确的手机号",
++        "code"  =>  "请输入正确的验证码"
++    ];
++}
+\ No newline at end of file
+Index: application/validate/PhoneGet.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/validate/PhoneGet.php	(date 1562205091030)
++++ application/validate/PhoneGet.php	(date 1562205091030)
+@@ -0,0 +1,20 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: Administrator
++ * Date: 2019/7/4 0004
++ * Time: 上午 09:44
++ */
++
++namespace app\validate;
++
++
++class PhoneGet extends BaseValidate
++{
++    protected $rule = [
++        "phone" => "require|isMobile"
++    ];
++    protected $message = [
++        "phone" => "手机号格式错误"
++    ];
++}
+\ No newline at end of file
+Index: application/common.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/common.php	(revision 5b8902ddedc5f25a2f4d6dd3ff6c7ed75352c5dd)
++++ application/common.php	(date 1562117686868)
+@@ -10,3 +10,13 @@
+ // +----------------------------------------------------------------------
+ 
+ // 应用公共文件
++function randNum($m){
++    $ychar="0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z";
++    $ychar = explode(',',$ychar);
++    $str = "";
++    for ($i=1;$i<=$m;$i++){
++        $random = rand(0,35);
++        $str .= $ychar[$random];
++    }
++    return $str;
++}
+Index: application/config.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/config.php	(revision 5b8902ddedc5f25a2f4d6dd3ff6c7ed75352c5dd)
++++ application/config.php	(date 1562133294856)
+@@ -156,7 +156,7 @@
+     // 显示错误信息
+     'show_error_msg'         => false,
+     // 异常处理handle类 留空使用 \think\exception\Handle
+-    'exception_handle'       => '',
++    'exception_handle'       => 'app\lib\exception\ExceptionHandler',
+ 
+     // +----------------------------------------------------------------------
+     // | 日志设置
+@@ -164,7 +164,7 @@
+ 
+     'log'                    => [
+         // 日志记录方式，内置 file socket 支持扩展
+-        'type'  => 'File',
++        'type'  => 'test',
+         // 日志保存目录
+         'path'  => LOG_PATH,
+         // 日志记录级别
+Index: application/database.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/database.php	(revision 5b8902ddedc5f25a2f4d6dd3ff6c7ed75352c5dd)
++++ application/database.php	(date 1562221347974)
+@@ -15,13 +15,13 @@
+     // 服务器地址
+     'hostname'        => '127.0.0.1',
+     // 数据库名
+-    'database'        => '',
++    'database'        => 'peopleinfo',
+     // 用户名
+     'username'        => 'root',
+     // 密码
+-    'password'        => '',
++    'password'        => 'root',
+     // 端口
+-    'hostport'        => '',
++    'hostport'        => '3306',
+     // 连接dsn
+     'dsn'             => '',
+     // 数据库连接参数

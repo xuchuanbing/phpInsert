@@ -12,9 +12,9 @@ namespace app\validate;
 class DoLoginPost extends BaseValidate
 {
     protected $rule = [
-        "_xcvf" =>  "require|checkXvcf",
-        "phone" =>  "require|isMobile",
-        "code"  =>  "require|checkCode"
+        "_xcvf" =>  "require|checkXcvfl|isNotEmpty",
+        "phone" =>  "require|isMobile|isNotEmpty",
+        "code"  =>  "require|checkCode|isNotEmpty"
     ];
 
     protected $message = [

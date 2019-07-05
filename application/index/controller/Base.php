@@ -15,7 +15,7 @@ class Base extends Controller
 {
     public function __construct(){
         parent::__construct();
-        session('userinfo','admin');
+        //session('userinfo',null);
         if(!session('userinfo')){
             $this->redirect("index/login/login");
         }
